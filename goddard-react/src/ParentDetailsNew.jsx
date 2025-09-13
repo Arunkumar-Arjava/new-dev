@@ -1,0 +1,601 @@
+import React, { useState, useEffect } from 'react';
+import HeaderNew from './components/HeaderNew';
+import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card';
+import { Button } from './components/ui/button';
+import { Badge } from './components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from './components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './components/ui/dialog';
+import { Skeleton } from './components/ui/skeleton';
+import { toast } from 'sonner';
+import {
+  UserPlus,
+  Mail,
+  Plus,
+  Download,
+  Users,
+  Filter,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import AddChildModal from './components/AddChildModal';
+
+const ParentDetailsNew = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [addingChild, setAddingChild] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('All');
+  const [showAddChildModal, setShowAddChildModal] = useState(false);
+  const [showStatusUpdateModal, setShowStatusUpdateModal] = useState(false);
+  const [selectedParentEmail, setSelectedParentEmail] = useState('');
+  const [selectedParentID, setSelectedParentID] = useState('');
+  const [selectedParentForStatus, setSelectedParentForStatus] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const navigate = useNavigate();
+  const isAuthenticated = true;
+  const signOut = () => {
+    console.log('Sign out clicked');
+    navigate('/login');
+  };
+
+
+
+  // Statistics
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    archived: 0,
+    invited: 0
+  });
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    // Calculate statistics
+    const activeCount = data.filter(item => item.status === 'Active').length;
+    const archivedCount = data.filter(item => item.status === 'Archive').length;
+    const invitedCount = data.filter(item => item.invite_status === 'Active').length;
+
+    setStats({
+      total: data.length,
+      active: activeCount,
+      archived: archivedCount,
+      invited: invitedCount
+    });
+  }, [data]);
+
+  const loadData = async (statusFilter = '') => {
+    setLoading(true);
+    try {
+      // Mock parent data
+      const mockActiveData = [
+        {
+          parent_name: 'Sarah Johnson',
+          primary_email: 'sarah.johnson@email.com',
+          invite_email: 'sarah.johnson@email.com',
+          time_stamp: '2024-01-15 10:30:00',
+          status: 'Active',
+          invite_status: 'Active',
+          parent_id: '1'
+        },
+        {
+          parent_name: 'Mike Smith',
+          primary_email: 'mike.smith@email.com',
+          invite_email: 'mike.smith@email.com',
+          time_stamp: '2024-01-14 14:20:00',
+          status: 'Active',
+          invite_status: 'Inactive',
+          parent_id: '2'
+        },
+        {
+          parent_name: 'Lisa Brown',
+          primary_email: 'lisa.brown@email.com',
+          invite_email: 'lisa.brown@email.com',
+          time_stamp: '2024-01-13 09:15:00',
+          status: 'Active',
+          invite_status: 'Active',
+          parent_id: '3'
+        }
+      ];
+      
+      const mockArchiveData = [
+        {
+          parent_name: 'John Davis',
+          primary_email: 'john.davis@email.com',
+          invite_email: 'john.davis@email.com',
+          time_stamp: '2024-01-10 16:45:00',
+          status: 'Archive',
+          invite_status: 'Inactive',
+          parent_id: '4'
+        }
+      ];
+
+      let responseData = [];
+
+      if (!statusFilter) {
+        responseData = mockActiveData;
+      } else if (statusFilter === "Archive") {
+        responseData = mockArchiveData;
+      } else if (statusFilter === "Active") {
+        responseData = mockActiveData;
+      } else if (statusFilter === "All") {
+        responseData = [...mockActiveData, ...mockArchiveData];
+      }
+
+      setData(responseData);
+      setCurrentPage(1);
+    } catch (error) {
+      setData([]);
+      toast.error('Failed to load parent data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusChange = (value) => {
+    setSelectedStatus(value);
+    loadData(value);
+  };
+
+  const handleResendEmail = async (email) => {
+    setSendingEmail(true);
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      console.log('Mock resend email to:', email);
+      toast.success('Email sent successfully!');
+    } catch (error) {
+      toast.error('Email sending failed!');
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  const handleStatusUpdate = async (parentId, newStatus) => {
+    setUpdatingStatus(true);
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('Mock status update for parent:', parentId, 'to status:', newStatus);
+      
+      // Update local data
+      setData(prevData => 
+        prevData.map(parent => 
+          parent.parent_id === parentId 
+            ? { ...parent, status: newStatus === 1 ? 'Active' : 'Archive' }
+            : parent
+        )
+      );
+      
+      toast.success('Parent status updated successfully!');
+      setShowStatusUpdateModal(false);
+    } catch (error) {
+      toast.error('Failed to update status!');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const openStatusUpdateModal = (parent, newStatus) => {
+    setSelectedParentForStatus({ ...parent, newStatus });
+    setShowStatusUpdateModal(true);
+  };
+
+  const handleAddChild = async (childData) => {
+    childData.parent_id = String(childData.parent_id);
+
+    setAddingChild(true);
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      console.log('Mock add child data:', childData);
+      toast.success('Child information created successfully!');
+      setShowAddChildModal(false);
+    } catch (error) {
+      toast.error('Something went wrong.');
+    } finally {
+      setAddingChild(false);
+    }
+  };
+
+  const handleExportToExcel = () => {
+    const exportData = data.map(row => ({
+      'Parent Name': row.parent_name || '',
+      'Parent Email': row.primary_email || row.invite_email || '',
+      'Date': row.time_stamp?.split(' ')[0] || '',
+      'Status': row.status || ''
+    }));
+
+    if (window.XLSX) {
+      const ws = window.XLSX.utils.json_to_sheet(exportData);
+      const wb = window.XLSX.utils.book_new();
+      window.XLSX.utils.book_append_sheet(wb, ws, 'Parent Details');
+      window.XLSX.writeFile(wb, 'Parent_details.xlsx');
+    } else {
+      // Fallback to CSV
+      const csvContent = [
+        Object.keys(exportData[0]).join(','),
+        ...exportData.map(row => Object.values(row).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Parent_details.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
+    toast.success('Export completed successfully!');
+  };
+
+  // Pagination
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = data.slice(startIndex, endIndex);
+
+
+  const goToPage = (page) => {
+    setCurrentPage(page);
+  };
+
+  const getStatusBadge = (status) => {
+    if (status === 'Active') {
+      return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Active</Badge>;
+    } else {
+      return <Badge variant="secondary" className="bg-gray-500 hover:bg-gray-600 text-white">Archived</Badge>;
+    }
+  };
+
+  const getInviteStatusBadge = (inviteStatus) => {
+    if (inviteStatus === 'Active') {
+      return <Badge variant="outline" className="text-green-600 border-green-600">Signed</Badge>;
+    } else {
+      return <Badge variant="outline" className="text-gray-600 border-gray-600">Not Signed</Badge>;
+    }
+  };
+
+  // Always render the component since we're using mock authentication
+  // if (!isAuthenticated) {
+  //   return null;
+  // }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <HeaderNew onSignOut={signOut} sidebar={true} component="ParentDetails" />
+
+      <div className="container mx-auto pt-6 px-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Parent Details</h1>
+            <p className="text-gray-600 mt-1">Manage parent information and invitations</p>
+          </div>
+          <Button onClick={() => navigate('/invite-parent')} className="bg-[#002e4d] hover:bg-[#002e4d]/90">
+            <UserPlus className="w-4 h-4 mr-2" />
+            Invite Parent
+          </Button>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Total Parents</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                </div>
+                <Users className="w-8 h-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Active</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.active}</p>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Archived</p>
+                  <p className="text-2xl font-bold text-gray-600">{stats.archived}</p>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Signed Parents</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.invited}</p>
+                </div>
+                <Mail className="w-8 h-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters and Actions */}
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <CardTitle className="text-xl">Parent Management</CardTitle>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Select value={selectedStatus} onValueChange={handleStatusChange}>
+                  <SelectTrigger className="w-full sm:w-48">
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Archive">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button variant="outline" onClick={handleExportToExcel}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Excel
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Parent Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Signed Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    // Loading skeleton
+                    Array.from({ length: 5 }).map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-8 w-24" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : currentData.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                        No parent data found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    currentData.map((row, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          {row.primary_email ? (
+                            <button
+                              onClick={() => navigate(`/parent-dashboard?id=${row.primary_email}`)}
+                              className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                            >
+                              {row.parent_name}
+                            </button>
+                          ) : (
+                            <span className="text-gray-900">{row.parent_name}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-gray-600">
+                          {row.primary_email || row.invite_email}
+                        </TableCell>
+                        <TableCell className="text-gray-600">
+                          {row.time_stamp?.split(' ')[0]}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={row.status === 'Active' ? '1' : '2'}
+                            onValueChange={(value) => openStatusUpdateModal(row, value)}
+                          >
+                            <SelectTrigger className="w-28">
+                              <SelectValue>
+                                {getStatusBadge(row.status)}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">
+                                <Badge variant="default" className="bg-green-500">Active</Badge>
+                              </SelectItem>
+                              <SelectItem value="2">
+                                <Badge variant="secondary" className="bg-gray-500 text-white">Archive</Badge>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          {getInviteStatusBadge(row.invite_status)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant={row.invite_status === 'Active' ? "secondary" : "default"}
+                              onClick={() => handleResendEmail(row.invite_email)}
+                              disabled={row.invite_status === 'Active' || sendingEmail}
+                              className={row.invite_status === 'Active' ? "" : "bg-[#002e4d] hover:bg-[#002e4d]/90"}
+                            >
+                              <Mail className="w-3 h-3 mr-1" />
+                              Send
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={row.invite_status === 'Inactive' ? "secondary" : "default"}
+                              onClick={() => {
+                                setSelectedParentEmail(row.invite_email);
+                                setSelectedParentID(row.parent_id)
+                                setShowAddChildModal(true);
+
+                              }}
+                              disabled={row.invite_status === 'Inactive' || addingChild}
+                              className={row.invite_status === 'Inactive' ? "" : "bg-[#002e4d] hover:bg-[#002e4d]/90"}
+                            >
+                              <Plus className="w-3 h-3 mr-1" />
+                              Add Child
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            {data.length > itemsPerPage && (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-gray-600">
+                  Showing {startIndex + 1} to {Math.min(endIndex, data.length)} of {data.length} results
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const page = i + 1;
+                    return (
+                      <Button
+                        key={page}
+                        variant={page === currentPage ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => goToPage(page)}
+                        className="w-8"
+                      >
+                        {page}
+                      </Button>
+                    );
+                  })}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Add Child Modal */}
+      <AddChildModal
+        isOpen={showAddChildModal}
+        onClose={() => setShowAddChildModal(false)}
+        parentEmail={selectedParentEmail}
+        onAddChild={handleAddChild}
+        Parent_id={selectedParentID}
+      />
+
+      {/* Status Update Confirmation Modal */}
+      <Dialog open={showStatusUpdateModal} onOpenChange={setShowStatusUpdateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Status Update</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to {selectedParentForStatus?.newStatus === '1' ? 'activate' : 'archive'} the parent "{selectedParentForStatus?.parent_name}"?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowStatusUpdateModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => handleStatusUpdate(selectedParentForStatus?.parent_id, selectedParentForStatus?.newStatus === '1' ? 1 : 0)}
+              disabled={updatingStatus}
+              className="bg-[#002e4d] hover:bg-[#002e4d]/90"
+            >
+              {updatingStatus ? 'Updating...' : 'Confirm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Loading Overlay */}
+      {(sendingEmail || addingChild || updatingStatus) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center gap-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#002e4d]"></div>
+                <p className="text-sm font-medium text-gray-700">
+                  {sendingEmail ? 'Sending Email...' : addingChild ? 'Adding Child...' : 'Updating Status...'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ParentDetailsNew;
