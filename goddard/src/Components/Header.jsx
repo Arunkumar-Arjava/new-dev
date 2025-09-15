@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LogOut, User } from 'lucide-react';
-// import SidebarNew from './SidebarNew';
-const toast = { success: (msg) => console.log(msg) };
+import SidebarNew from './Sidebar/';
+import { toast } from 'sonner';
 
 function Header({ onSignOut, sidebar, component }) {
   const [showSignOutModal, setShowSignOutModal] = useState(false);
@@ -31,7 +31,7 @@ function Header({ onSignOut, sidebar, component }) {
         <div className="hidden sm:flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
           {/* Left Section - Sidebar */}
           <div className="flex items-center">
-            {/* {sidebar && <SidebarNew activeItem={component} />} */}
+            {sidebar && <SidebarNew activeItem={component} />}
           </div>
 
           {/* Center - Logo */}
@@ -84,7 +84,7 @@ function Header({ onSignOut, sidebar, component }) {
           {/* Bottom Row - Navigation + Sign Out */}
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center">
-              {/* {sidebar && <SidebarNew activeItem={component} />} */}
+              {sidebar && <SidebarNew activeItem={component} />}
             </div>
 
             {onSignOut && (

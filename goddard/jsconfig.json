@@ -1,0 +1,12 @@
+{
+  "include": ["src/**/*", "src/Components/Sidebar.jsx"],
+  "references": [
+
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client"
 
 import { useTheme } from "next-themes"
@@ -24,3 +25,18 @@ const Toaster = ({
 }
 
 export { Toaster }
+=======
+import { Toaster as Sonner } from "sonner"
+
+const Toaster = ({ ...props }) => {
+  return (
+    <Sonner
+      theme="light"
+      className="toaster group"
+      {...props}
+    />
+  )
+}
+
+export { Toaster }
+>>>>>>> 6c4b420564277bc06b1badc3f187bb6f47dd2c1f
