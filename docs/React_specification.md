@@ -56,11 +56,11 @@ theme: {
   extend: {
     colors: {
       primary: {
-        DEFAULT: "#1D4ED8", // Blue-600
+        DEFAULT: "#002e4d", // Blue-600
         foreground: "#FFFFFF",
       },
       secondary: {
-        DEFAULT: "#3B82F6", // Blue-500
+        DEFAULT: "#002e4d", // Blue-500
         foreground: "#FFFFFF",
       },
       background: "#FFFFFF",   // White background
