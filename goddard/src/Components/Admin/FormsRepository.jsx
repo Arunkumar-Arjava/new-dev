@@ -111,7 +111,7 @@ const FormsRepository = () => {
 
   useEffect(() => {
     loadClassroomData();
-    loadFormsFromAPI();
+    loadFormsWithMockData();
     loadStudentForms();
     loadAvailableForms();
     loadStudentDropdownForms();
@@ -193,13 +193,19 @@ const FormsRepository = () => {
     }
   };
 
-  // Load forms from API
-  const loadFormsFromAPI = async () => {
+  // Load forms with mock data
+  const loadFormsWithMockData = async () => {
     try {
-      const mappedForms = await fetchFormTemplates();
-      setForms(mappedForms);
+      const mockForms = [
+        { id: '1', formName: 'Admission Form', changeType: 'Active' },
+        { id: '2', formName: 'Enrollment Agreement', changeType: 'Default' },
+        { id: '3', formName: 'Parent Handbook', changeType: 'Active' },
+        { id: '4', formName: 'Authorization Form', changeType: 'Available' },
+        { id: '5', formName: 'Medical Form', changeType: 'Active' }
+      ];
+      setForms(mockForms);
     } catch (error) {
-      console.log('Failed to load forms from API');
+      console.log('Failed to load forms with mock data');
       setForms([]);
     }
   };
@@ -348,18 +354,27 @@ const FormsRepository = () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      console.log('Saving forms:', editingClassroom.forms);
-      console.log('Current forms:', classroomForms[editingClassroom.class_id]);
+      // Update classroom name in classrooms array
+      setClassrooms(prev => prev.map(classroom => 
+        classroom.class_id === editingClassroom.class_id 
+          ? { ...classroom, class_name: editClassroomName.trim() }
+          : classroom
+      ));
 
-      // Update local state immediately
-      setClassroomForms(prev => {
-        const updated = {
-          ...prev,
-          [editingClassroom.class_id]: editingClassroom.forms
-        };
-        console.log('Updated classroomForms:', updated);
-        return updated;
-      });
+      // Update classroom forms
+      setClassroomForms(prev => ({
+        ...prev,
+        [editingClassroom.class_id]: editingClassroom.forms
+      }));
+
+      // Update student forms if classroom name changed
+      if (editClassroomName.trim() !== editingClassroom.class_name) {
+        setStudentForms(prev => prev.map(student => 
+          student.classroom === editingClassroom.class_name
+            ? { ...student, classroom: editClassroomName.trim() }
+            : student
+        ));
+      }
 
       toast.success('Classroom updated successfully!');
       setShowEditDialog(false);
@@ -431,13 +446,47 @@ const FormsRepository = () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const updatedForms = forms.map(form =>
+      const oldFormName = editingForm.formName;
+      const newFormName = editFormName.trim();
+      
+      // Update forms array
+      setForms(prev => prev.map(form =>
         form.id === editingForm.id
-          ? { ...form, formName: editFormName.trim(), changeType: editFormChangeType }
+          ? { ...form, formName: newFormName, changeType: editFormChangeType }
           : form
-      );
+      ));
 
-      setForms(updatedForms);
+      // Update available forms if name changed
+      if (oldFormName !== newFormName) {
+        setAvailableForms(prev => prev.map(form =>
+          form.name === oldFormName
+            ? { ...form, name: newFormName }
+            : form
+        ));
+
+        // Update student dropdown forms
+        setStudentDropdownForms(prev => prev.map(form =>
+          form === oldFormName ? newFormName : form
+        ));
+
+        // Update classroom forms
+        setClassroomForms(prev => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach(classId => {
+            updated[classId] = updated[classId].map(form =>
+              form === oldFormName ? newFormName : form
+            );
+          });
+          return updated;
+        });
+
+        // Update student forms
+        setStudentForms(prev => prev.map(student => ({
+          ...student,
+          forms: student.forms.map(form => form === oldFormName ? newFormName : form)
+        })));
+      }
+
       toast.success('Form updated successfully!');
       setShowEditFormDialog(false);
       setEditingForm(null);
@@ -491,12 +540,23 @@ const FormsRepository = () => {
     }
   };
 
-  const handleDeleteForm = () => {
-    const updatedForms = forms.filter(form => form.id !== deletingForm.id);
-    setForms(updatedForms);
-    toast.success('Form deleted successfully!');
-    setShowDeleteFormDialog(false);
-    setDeletingForm(null);
+  const handleDeleteForm = async () => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const updatedForms = forms.filter(form => form.id !== deletingForm.id);
+      setForms(updatedForms);
+      
+      // Also remove from available forms and student dropdown
+      setAvailableForms(prev => prev.filter(form => form.id !== deletingForm.id));
+      setStudentDropdownForms(prev => prev.filter(form => form !== deletingForm.formName));
+      
+      toast.success('Form deleted successfully!');
+      setShowDeleteFormDialog(false);
+      setDeletingForm(null);
+    } catch (error) {
+      toast.error('Error deleting form');
+    }
   };
 
   const handleDeleteStudentForm = async (student, form) => {
@@ -731,7 +791,7 @@ const FormsRepository = () => {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => openDeleteDialog(classroom)}
-                                disabled={classroom.class_name === 'Unassign' || (classroom.count || 0) > 0}
+                                disabled={classroom.class_name === 'Unassign'}
                                 className="h-7 w-7 p-0 text-red-500 hover:bg-red-50"
                               >
                                 <Trash2 className="w-3 h-3" />
@@ -853,7 +913,7 @@ const FormsRepository = () => {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => openDeleteDialog(classroom)}
-                                  disabled={classroom.class_name === 'Unassign' || (classroom.count || 0) > 0}
+                                  disabled={classroom.class_name === 'Unassign'}
                                   className="text-red-600 border-red-600 hover:bg-red-50"
                                 >
                                   <Trash2 className="w-3 h-3" />
@@ -1002,7 +1062,6 @@ const FormsRepository = () => {
                                 variant="ghost"
                                 onClick={() => openDeleteFormDialog(form)}
                                 className="h-7 w-7 p-0 text-red-500 hover:bg-red-50"
-                                disabled
                               >
                                 <Trash2 className="w-3 h-3" />
                               </Button>
@@ -1093,7 +1152,6 @@ const FormsRepository = () => {
                                   variant="outline"
                                   onClick={() => openDeleteFormDialog(form)}
                                   className="text-red-600 border-red-600 hover:bg-red-50"
-                                  disabled
                                 >
                                   <Trash2 className="w-3 h-3" />
                                 </Button>
@@ -1178,6 +1236,7 @@ const FormsRepository = () => {
                         
                         <div>
                           <Select
+                            key={`mobile-${student.id}-${student.forms.length}`}
                             onValueChange={async (value) => {
                               if (value) {
                                 const updatedForms = [...studentForms];
@@ -1253,6 +1312,7 @@ const FormsRepository = () => {
                           </TableCell>
                           <TableCell className="w-48">
                             <Select
+                              key={`desktop-${student.id}-${student.forms.length}`}
                               onValueChange={async (value) => {
                                 if (value) {
                                   const updatedForms = [...studentForms];
@@ -1297,70 +1357,96 @@ const FormsRepository = () => {
 
       {/* Edit Classroom Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Classroom</DialogTitle>
             <DialogDescription>
-              Update the classroom name. This will affect all associated students and records.
+              Update classroom information and manage assigned forms.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div>
-              <Label htmlFor="edit-classroom-name">Classroom Name</Label>
-              <Input
-                id="edit-classroom-name"
-                value={editClassroomName}
-                onChange={(e) => setEditClassroomName(e.target.value)}
-                className="mt-1"
-                disabled={isEditingClassroom}
-              />
-            </div>
-
-            <div>
-              <Label>Forms</Label>
-              <div className="mt-2 space-y-2">
-                <div className="flex flex-wrap gap-2">
-                  {(editingClassroom?.forms || ['Admission Form']).map((form, index) => (
-                    <Badge key={index} variant="secondary" className="bg-green-100 text-green-700 flex items-center gap-1 px-3 py-1">
-                      <span>{form}</span>
-                      <button
-                        onClick={() => {
-                          const updatedForms = (editingClassroom?.forms || ['Admission Form']).filter(f => f !== form);
-                          setEditingClassroom({ ...editingClassroom, forms: updatedForms });
-                        }}
-                        className="ml-1 hover:bg-red-200 rounded-full p-0.5 transition-colors"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-
-                <Select
-                  onValueChange={(value) => {
-                    if (value) {
-                      const currentForms = editingClassroom?.forms || ['Admission Form'];
-                      if (!currentForms.includes(value)) {
-                        setEditingClassroom({ ...editingClassroom, forms: [...currentForms, value] });
-                      }
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Add Form" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableForms
-                      .filter(form => !(editingClassroom?.forms || ['Admission Form']).includes(form.name))
-                      .map((form, index) => (
-                        <SelectItem key={index} value={form.name}>{form.name}</SelectItem>
-                      ))
-                    }
-                  </SelectContent>
-                </Select>
+          
+          <Tabs defaultValue="classroom" className="py-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="classroom" className="flex items-center gap-2">
+                <School className="w-4 h-4" />
+                Classroom Info
+              </TabsTrigger>
+              <TabsTrigger value="forms" className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Forms Management
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="classroom" className="space-y-4 mt-4">
+              <div>
+                <Label htmlFor="edit-classroom-name">Classroom Name</Label>
+                <Input
+                  id="edit-classroom-name"
+                  value={editClassroomName}
+                  onChange={(e) => setEditClassroomName(e.target.value)}
+                  className="mt-1"
+                  disabled={isEditingClassroom}
+                  placeholder="Enter classroom name"
+                />
               </div>
-            </div>
-          </div>
+            </TabsContent>
+            
+            <TabsContent value="forms" className="space-y-4 mt-4">
+              <div>
+                <Label>Assigned Forms</Label>
+                <div className="mt-2 space-y-3">
+                  <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border rounded-md">
+                    {(editingClassroom?.forms || ['Admission Form']).length > 0 ? (
+                      (editingClassroom?.forms || ['Admission Form']).map((form, index) => (
+                        <Badge key={index} variant="secondary" className="bg-green-100 text-green-700 flex items-center gap-1 px-3 py-1">
+                          <span>{form}</span>
+                          <button
+                            onClick={() => {
+                              const updatedForms = (editingClassroom?.forms || ['Admission Form']).filter(f => f !== form);
+                              setEditingClassroom({ ...editingClassroom, forms: updatedForms });
+                            }}
+                            className="ml-1 hover:bg-red-200 rounded-full p-0.5 transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-gray-400 text-sm">No forms assigned</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>Add New Form</Label>
+                    <Select
+                      key={`classroom-forms-${editingClassroom?.forms?.length || 0}`}
+                      onValueChange={(value) => {
+                        if (value) {
+                          const currentForms = editingClassroom?.forms || ['Admission Form'];
+                          if (!currentForms.includes(value)) {
+                            setEditingClassroom({ ...editingClassroom, forms: [...currentForms, value] });
+                          }
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full mt-1">
+                        <SelectValue placeholder="Select a form to add" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableForms
+                          .filter(form => !(editingClassroom?.forms || ['Admission Form']).includes(form.name))
+                          .map((form, index) => (
+                            <SelectItem key={index} value={form.name}>{form.name}</SelectItem>
+                          ))
+                        }
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+          
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>
               Cancel
