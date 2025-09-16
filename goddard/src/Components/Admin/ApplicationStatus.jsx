@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Download, ExternalLink, Users, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Search, Filter, Download, ExternalLink, Users, FileText, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -106,8 +106,24 @@ const ApplicationStatus = () => {
     setLoading(true);
     
     try {
-      const { mockApplications } = await import('@/lib/mockData');
-      const mockData = mockApplications;
+      // 15 sample data records for testing pagination
+      const mockData = [
+        { child_first_name: 'John', child_last_name: 'Smith', class_name: 'Pre-K', primary_email: 'john.smith@email.com', additional_parent_email: 'jane.smith@email.com', form_status: 'Completed' },
+        { child_first_name: 'Emma', child_last_name: 'Johnson', class_name: 'Kindergarten', primary_email: 'emma.johnson@email.com', additional_parent_email: '', form_status: 'Incomplete' },
+        { child_first_name: 'Michael', child_last_name: 'Brown', class_name: 'Pre-K', primary_email: 'michael.brown@email.com', additional_parent_email: 'sarah.brown@email.com', form_status: 'Completed' },
+        { child_first_name: 'Sophia', child_last_name: 'Davis', class_name: 'Toddler', primary_email: 'sophia.davis@email.com', additional_parent_email: '', form_status: 'Incomplete' },
+        { child_first_name: 'William', child_last_name: 'Wilson', class_name: 'Kindergarten', primary_email: 'william.wilson@email.com', additional_parent_email: 'mary.wilson@email.com', form_status: 'Completed' },
+        { child_first_name: 'Olivia', child_last_name: 'Miller', class_name: 'Pre-K', primary_email: 'olivia.miller@email.com', additional_parent_email: '', form_status: 'Incomplete' },
+        { child_first_name: 'James', child_last_name: 'Garcia', class_name: 'Toddler', primary_email: 'james.garcia@email.com', additional_parent_email: 'lisa.garcia@email.com', form_status: 'Completed' },
+        { child_first_name: 'Isabella', child_last_name: 'Martinez', class_name: 'Kindergarten', primary_email: 'isabella.martinez@email.com', additional_parent_email: '', form_status: 'Incomplete' },
+        { child_first_name: 'Benjamin', child_last_name: 'Anderson', class_name: 'Pre-K', primary_email: 'benjamin.anderson@email.com', additional_parent_email: 'anna.anderson@email.com', form_status: 'Completed' },
+        { child_first_name: 'Charlotte', child_last_name: 'Taylor', class_name: 'Toddler', primary_email: 'charlotte.taylor@email.com', additional_parent_email: '', form_status: 'Incomplete' },
+        { child_first_name: 'Lucas', child_last_name: 'Thomas', class_name: 'Kindergarten', primary_email: 'lucas.thomas@email.com', additional_parent_email: 'jennifer.thomas@email.com', form_status: 'Completed' },
+        { child_first_name: 'Amelia', child_last_name: 'Jackson', class_name: 'Pre-K', primary_email: 'amelia.jackson@email.com', additional_parent_email: '', form_status: 'Incomplete' },
+        { child_first_name: 'Henry', child_last_name: 'White', class_name: 'Toddler', primary_email: 'henry.white@email.com', additional_parent_email: 'susan.white@email.com', form_status: 'Completed' },
+        { child_first_name: 'Mia', child_last_name: 'Harris', class_name: 'Kindergarten', primary_email: 'mia.harris@email.com', additional_parent_email: '', form_status: 'Incomplete' },
+        { child_first_name: 'Alexander', child_last_name: 'Clark', class_name: 'Pre-K', primary_email: 'alexander.clark@email.com', additional_parent_email: 'rachel.clark@email.com', form_status: 'Completed' }
+      ];
 
       let responseData = [...mockData];
 
@@ -224,10 +240,15 @@ const ApplicationStatus = () => {
   };
 
   // Pagination
+  const mobileItemsPerPage = 5;
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const mobileTotalPages = Math.ceil(filteredData.length / mobileItemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
+  const mobileStartIndex = (currentPage - 1) * mobileItemsPerPage;
+  const mobileEndIndex = mobileStartIndex + mobileItemsPerPage;
   const currentData = filteredData.slice(startIndex, endIndex);
+  const mobileCurrentData = filteredData.slice(mobileStartIndex, mobileEndIndex);
 
   const getStatsData = () => {
     const completed = filteredData.filter(row => 
@@ -567,27 +588,25 @@ const ApplicationStatus = () => {
                   No applications found matching your criteria
                 </div>
               ) : (
-                currentData.map((row, index) => (
+                mobileCurrentData.map((row, index) => (
                   <div 
                     key={index} 
                     className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-200 cursor-pointer"
                     onClick={() => handleRowClick(row)}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-gray-900 text-base">
-                            {`${row.child_first_name || ''} ${row.child_last_name || ''}`.trim()}
-                          </h3>
-                          {row.primary_email && (
-                            <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                          )}
-                        </div>
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-gray-900 text-base">
+                          {`${row.child_first_name || ''} ${row.child_last_name || ''}`.trim()}
+                        </h3>
+                        {row.primary_email && (
+                          <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between">
                         <Badge variant="outline" className="text-xs font-medium">
                           {row.class_name || 'Unassigned'}
                         </Badge>
-                      </div>
-                      <div className="ml-3 flex-shrink-0">
                         {getStatusBadge(row.form_status)}
                       </div>
                     </div>
@@ -609,34 +628,80 @@ const ApplicationStatus = () => {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 gap-3">
-                <p className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
-                  Showing {startIndex + 1} to {Math.min(endIndex, filteredData.length)} of {filteredData.length} results
-                </p>
-                <div className="flex items-center justify-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="text-xs sm:text-sm"
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-xs sm:text-sm text-gray-600 px-2">
-                    {currentPage} / {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className="text-xs sm:text-sm"
-                  >
-                    Next
-                  </Button>
-                </div>
+            {(filteredData.length > itemsPerPage || filteredData.length > mobileItemsPerPage) && (
+              <div className="mt-4">
+                {filteredData.length > itemsPerPage && (
+                  <div className="hidden md:flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      Showing {startIndex + 1} to {Math.min(endIndex, filteredData.length)} of {filteredData.length} results
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="bg-[#002e4d] text-white hover:bg-[#002e4d]/90 border-[#002e4d]"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const page = i + 1;
+                        return (
+                          <Button
+                            key={page}
+                            variant={page === currentPage ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className={`w-8 ${page === currentPage ? 'bg-[#002e4d] text-white hover:bg-[#002e4d]/90' : 'bg-[#002e4d] text-white hover:bg-[#002e4d]/90 border-[#002e4d]'}`}
+                          >
+                            {page}
+                          </Button>
+                        );
+                      })}
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="bg-[#002e4d] text-white hover:bg-[#002e4d]/90 border-[#002e4d]"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Mobile Pagination */}
+                {filteredData.length > mobileItemsPerPage && (
+                  <div className="md:hidden">
+                    <div className="text-xs text-gray-600 text-center mb-3">
+                      Page {currentPage} of {mobileTotalPages} ({filteredData.length} total)
+                    </div>
+                    <div className="flex justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="h-8 bg-[#002e4d] text-white hover:bg-[#002e4d]/90 border-[#002e4d]"
+                      >
+                        <ChevronLeft className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === mobileTotalPages}
+                        className="h-8 bg-[#002e4d] text-white hover:bg-[#002e4d]/90 border-[#002e4d]"
+                      >
+                        <ChevronRight className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

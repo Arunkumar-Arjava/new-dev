@@ -118,6 +118,78 @@ const ParentDetails = () => {
           status: 'Active',
           invite_status: 'Active',
           parent_id: '3'
+        },
+        {
+          parent_name: 'David Wilson',
+          primary_email: 'david.wilson@email.com',
+          invite_email: 'david.wilson@email.com',
+          time_stamp: '2024-01-12 11:45:00',
+          status: 'Active',
+          invite_status: 'Active',
+          parent_id: '4'
+        },
+        {
+          parent_name: 'Emma Davis',
+          primary_email: 'emma.davis@email.com',
+          invite_email: 'emma.davis@email.com',
+          time_stamp: '2024-01-11 16:20:00',
+          status: 'Active',
+          invite_status: 'Inactive',
+          parent_id: '5'
+        },
+        {
+          parent_name: 'James Miller',
+          primary_email: 'james.miller@email.com',
+          invite_email: 'james.miller@email.com',
+          time_stamp: '2024-01-10 08:30:00',
+          status: 'Active',
+          invite_status: 'Active',
+          parent_id: '6'
+        },
+        {
+          parent_name: 'Olivia Garcia',
+          primary_email: 'olivia.garcia@email.com',
+          invite_email: 'olivia.garcia@email.com',
+          time_stamp: '2024-01-09 13:15:00',
+          status: 'Active',
+          invite_status: 'Inactive',
+          parent_id: '7'
+        },
+        {
+          parent_name: 'William Martinez',
+          primary_email: 'william.martinez@email.com',
+          invite_email: 'william.martinez@email.com',
+          time_stamp: '2024-01-08 10:00:00',
+          status: 'Active',
+          invite_status: 'Active',
+          parent_id: '8'
+        },
+        {
+          parent_name: 'Sophia Anderson',
+          primary_email: 'sophia.anderson@email.com',
+          invite_email: 'sophia.anderson@email.com',
+          time_stamp: '2024-01-07 15:45:00',
+          status: 'Active',
+          invite_status: 'Active',
+          parent_id: '9'
+        },
+        {
+          parent_name: 'Benjamin Taylor',
+          primary_email: 'benjamin.taylor@email.com',
+          invite_email: 'benjamin.taylor@email.com',
+          time_stamp: '2024-01-06 12:30:00',
+          status: 'Active',
+          invite_status: 'Inactive',
+          parent_id: '10'
+        },
+        {
+          parent_name: 'Charlotte Thomas',
+          primary_email: 'charlotte.thomas@email.com',
+          invite_email: 'charlotte.thomas@email.com',
+          time_stamp: '2024-01-05 09:20:00',
+          status: 'Active',
+          invite_status: 'Active',
+          parent_id: '11'
         }
       ];
       
@@ -126,10 +198,10 @@ const ParentDetails = () => {
           parent_name: 'John Davis',
           primary_email: 'john.davis@email.com',
           invite_email: 'john.davis@email.com',
-          time_stamp: '2024-01-10 16:45:00',
+          time_stamp: '2024-01-04 16:45:00',
           status: 'Archive',
           invite_status: 'Inactive',
-          parent_id: '4'
+          parent_id: '12'
         }
       ];
 
@@ -256,10 +328,15 @@ const ParentDetails = () => {
   };
 
   // Pagination
+  const mobileItemsPerPage = 5;
   const totalPages = Math.ceil(data.length / itemsPerPage);
+  const mobileTotalPages = Math.ceil(data.length / mobileItemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
+  const mobileStartIndex = (currentPage - 1) * mobileItemsPerPage;
+  const mobileEndIndex = mobileStartIndex + mobileItemsPerPage;
   const currentData = data.slice(startIndex, endIndex);
+  const mobileCurrentData = data.slice(mobileStartIndex, mobileEndIndex);
 
   const goToPage = (page) => {
     setCurrentPage(page);
@@ -380,7 +457,8 @@ const ParentDetails = () => {
           </CardHeader>
 
           <CardContent>
-            <div className="rounded-md border">
+            {/* Desktop Table View */}
+            <div className="hidden md:block rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -418,7 +496,7 @@ const ParentDetails = () => {
                           {row.primary_email ? (
                             <button
                               onClick={() => navigate(`/parent-dashboard?id=${row.primary_email}`)}
-                              className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                              className="text-blue-600 hover:text-blue-800 font-medium hover:underline cursor-pointer"
                             >
                               {row.parent_name}
                             </button>
@@ -490,45 +568,172 @@ const ParentDetails = () => {
               </Table>
             </div>
 
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-2">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <Card key={index}>
+                    <CardContent className="p-3">
+                      <Skeleton className="h-4 w-32 mb-2" />
+                      <Skeleton className="h-3 w-full mb-3" />
+                      <div className="flex gap-2 mb-3">
+                        <Skeleton className="h-5 w-14" />
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                      <div className="space-y-2">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-full" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : currentData.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-center text-gray-500">
+                    No parent data found
+                  </CardContent>
+                </Card>
+              ) : (
+                mobileCurrentData.map((row, index) => (
+                  <Card key={index}>
+                    <CardContent className="p-3">
+                      <div className="mb-3">
+                        {row.primary_email ? (
+                          <button
+                            onClick={() => navigate(`/parent-dashboard?id=${row.primary_email}`)}
+                            className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline block w-full text-left truncate cursor-pointer"
+                          >
+                            {row.parent_name}
+                          </button>
+                        ) : (
+                          <h3 className="text-sm font-semibold text-gray-900 truncate">{row.parent_name}</h3>
+                        )}
+                        <p className="text-xs text-gray-600 mt-1 truncate">{row.primary_email || row.invite_email}</p>
+                        <p className="text-xs text-gray-500 mt-1">{row.time_stamp?.split(' ')[0]}</p>
+                      </div>
+                      
+                      <div className="flex gap-2 mb-2">
+                        {getStatusBadge(row.status)}
+                        {getInviteStatusBadge(row.invite_status)}
+                      </div>
+                      
+                      <div className="mb-3">
+                        <Select
+                          value={row.status === 'Active' ? '1' : '2'}
+                          onValueChange={(value) => openStatusUpdateModal(row, value)}
+                        >
+                          <SelectTrigger className="w-full h-6 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">Active</SelectItem>
+                            <SelectItem value="2">Archive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          size="sm"
+                          variant={row.invite_status === 'Active' ? "secondary" : "default"}
+                          onClick={() => handleResendEmail(row.invite_email)}
+                          disabled={row.invite_status === 'Active' || sendingEmail}
+                          className={`h-8 text-xs ${row.invite_status === 'Active' ? "" : "bg-[#002e4d] hover:bg-[#002e4d]/90"}`}
+                        >
+                          <Mail className="w-3 h-3 mr-1" />
+                          Send
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={row.invite_status === 'Inactive' ? "secondary" : "default"}
+                          onClick={() => {
+                            setSelectedParentEmail(row.invite_email);
+                            setSelectedParentID(row.parent_id)
+                            setShowAddChildModal(true);
+                          }}
+                          disabled={row.invite_status === 'Inactive' || addingChild}
+                          className={`h-8 text-xs ${row.invite_status === 'Inactive' ? "" : "bg-[#002e4d] hover:bg-[#002e4d]/90"}`}
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add Child
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+
             {/* Pagination */}
             {data.length > itemsPerPage && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-gray-600">
-                  Showing {startIndex + 1} to {Math.min(endIndex, data.length)} of {data.length} results
+              <div className="mt-4">
+                <div className="hidden md:flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Showing {startIndex + 1} to {Math.min(endIndex, data.length)} of {data.length} results
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="bg-[#002e4d] text-white hover:bg-[#002e4d]/90 border-[#002e4d]"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = i + 1;
+                      return (
+                        <Button
+                          key={page}
+                          variant={page === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => goToPage(page)}
+                          className={`w-8 ${page === currentPage ? 'bg-[#002e4d] text-white hover:bg-[#002e4d]/90' : 'bg-[#002e4d] text-white hover:bg-[#002e4d]/90 border-[#002e4d]'}`}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="bg-[#002e4d] text-white hover:bg-[#002e4d]/90 border-[#002e4d]"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const page = i + 1;
-                    return (
-                      <Button
-                        key={page}
-                        variant={page === currentPage ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => goToPage(page)}
-                        className="w-8"
-                      >
-                        {page}
-                      </Button>
-                    );
-                  })}
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
+                
+                {/* Mobile Pagination */}
+                <div className="md:hidden">
+                  <div className="text-xs text-gray-600 text-center mb-3">
+                    Page {currentPage} of {mobileTotalPages} ({data.length} total)
+                  </div>
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="h-8 bg-[#002e4d] text-white hover:bg-[#002e4d]/90 border-[#002e4d]"
+                    >
+                      <ChevronLeft className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === mobileTotalPages}
+                      className="h-8 bg-[#002e4d] text-white hover:bg-[#002e4d]/90 border-[#002e4d]"
+                    >
+                      <ChevronRight className="w-3 h-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
