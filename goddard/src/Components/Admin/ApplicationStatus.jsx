@@ -4,13 +4,13 @@ import { Search, Filter, Download, ExternalLink, Users, FileText, AlertCircle, C
 import { toast } from 'sonner';
 import { classroomApis, formTemplateApis, enrollmentApis } from '../../services/allApis';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Badge } from '../ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Skeleton } from '../ui/skeleton';
 import Header from '../Header';
 
 
@@ -23,6 +23,7 @@ const ApplicationStatus = () => {
   };
   
   const [data, setData] = useState([]);
+  const [originalData, setOriginalData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -62,8 +63,13 @@ const ApplicationStatus = () => {
 
   const loadClassrooms = async () => {
     try {
+      console.log('Fetching classrooms for ApplicationStatus...');
       const response = await classroomApis.getClassrooms();
-      const mockData = response.data;
+      console.log('Classrooms response:', response);
+      
+      // Handle the mock API response structure
+      const mockData = response.data.data || response.data;
+      console.log('Classrooms data:', mockData);
       
       const classroomOptions = [
         { value: 'all', label: 'All Classrooms', dataValue: 'all' },
@@ -80,14 +86,21 @@ const ApplicationStatus = () => {
         setSelectedClassroom(classID);
       }
     } catch (error) {
+      console.error('Failed to load classrooms:', error);
       toast.error('Failed to load classrooms');
     }
   };
 
   const loadForms = async () => {
     try {
+      console.log('Fetching form templates for ApplicationStatus...');
       const response = await formTemplateApis.getFormTemplates();
-      const mockData = response.data;
+      console.log('Form templates response:', response);
+      
+      // Handle the mock API response structure
+      const mockData = response.data.data || response.data;
+      console.log('Form templates data:', mockData);
+      
       const formOptions = [
         { value: 'all', label: 'All Forms' },
         ...mockData.map(item => ({
@@ -97,6 +110,7 @@ const ApplicationStatus = () => {
       ];
       setForms(formOptions);
     } catch (error) {
+      console.error('Failed to load forms:', error);
       toast.error('Failed to load forms');
     }
   };
@@ -105,8 +119,15 @@ const ApplicationStatus = () => {
     setLoading(true);
     
     try {
+      console.log('Fetching enrollments for ApplicationStatus...');
       const response = await enrollmentApis.getEnrollments();
-      let responseData = response.data.map(enrollment => ({
+      console.log('Enrollments response:', response);
+      
+      // Handle the mock API response structure
+      const enrollments = response.data.data || response.data;
+      console.log('Enrollments data:', enrollments);
+      
+      let responseData = enrollments.map(enrollment => ({
         child_first_name: enrollment.child?.first_name || '',
         child_last_name: enrollment.child?.last_name || '',
         class_name: enrollment.classroom?.name || 'Unassigned',
@@ -128,8 +149,10 @@ const ApplicationStatus = () => {
         }
       }
 
+      setOriginalData(responseData);
       setData(responseData);
     } catch (error) {
+      console.error('Failed to load application data:', error);
       toast.error('Failed to load application data');
       setData([]);
     } finally {
@@ -238,7 +261,9 @@ const ApplicationStatus = () => {
   const currentData = filteredData.slice(startIndex, endIndex);
   const mobileCurrentData = filteredData.slice(mobileStartIndex, mobileEndIndex);
 
-  const getStatsData = () => {
+  const [stats, setStats] = useState({ total: 0, completed: 0, incomplete: 0 });
+
+  useEffect(() => {
     const completed = filteredData.filter(row => 
       (row.form_status || '').toLowerCase().includes('completed')
     ).length;
@@ -246,10 +271,8 @@ const ApplicationStatus = () => {
       (row.form_status || '').toLowerCase().includes('incomplete')
     ).length;
     
-    return { total: filteredData.length, completed, incomplete };
-  };
-
-  const stats = getStatsData();
+    setStats({ total: filteredData.length, completed, incomplete });
+  }, [filteredData]);
 
   // Always render the component since we're using mock authentication
   // if (!isAuthenticated) {
