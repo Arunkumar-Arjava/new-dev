@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Users, Settings, ChevronRight, Activity } from 'lucide-react';
+import { adminApis } from '../../services/allApis';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
@@ -15,30 +16,72 @@ const AdminDashboard = () => {
     navigate('/login');
   };
 
-  // Dashboard metrics (these could be fetched from an API)
-  const dashboardStats = [
+  const [dashboardStats, setDashboardStats] = useState([
     {
       title: 'Active Applications',
-      value: '24',
+      value: '0',
       description: 'Pending review',
       trend: '+12%',
       trendType: 'positive'
     },
     {
       title: 'Total Parents',
-      value: '156',
+      value: '0',
       description: 'Registered users',
       trend: '+8%',
       trendType: 'positive'
     },
     {
       title: 'Forms Submitted',
-      value: '89',
+      value: '0',
       description: 'This month',
       trend: '+15%',
       trendType: 'positive'
     }
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        console.log('Fetching dashboard stats...');
+        const response = await adminApis.getDashboard();
+        console.log('Dashboard response:', response);
+        console.log('Response data:', response.data);
+        console.log('Response data type:', typeof response.data);
+        const stats = response.data.data || response.data;
+        console.log('Dashboard stats:', stats);
+        console.log('Active applications:', stats?.active_applications);
+        console.log('Total parents:', stats?.total_parents);
+        console.log('Forms submitted:', stats?.forms_submitted);
+        setDashboardStats([
+          {
+            title: 'Active Applications',
+            value: (stats?.active_applications ?? 0).toString(),
+            description: 'Pending review',
+            trend: '+12%',
+            trendType: 'positive'
+          },
+          {
+            title: 'Total Parents',
+            value: (stats?.total_parents ?? 0).toString(),
+            description: 'Registered users',
+            trend: '+8%',
+            trendType: 'positive'
+          },
+          {
+            title: 'Forms Submitted',
+            value: (stats?.forms_submitted ?? 0).toString(),
+            description: 'This month',
+            trend: '+15%',
+            trendType: 'positive'
+          }
+        ]);
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const dashboardCards = [
     {

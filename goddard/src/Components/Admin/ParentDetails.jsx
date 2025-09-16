@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../Header';
+import { profileApis } from '../../services/allApis';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -42,6 +43,7 @@ import { useNavigate } from 'react-router-dom';
 
 const ParentDetails = () => {
   const [data, setData] = useState([]);
+  const [originalData, setOriginalData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [addingChild, setAddingChild] = useState(false);
@@ -74,152 +76,50 @@ const ParentDetails = () => {
   }, []);
 
   useEffect(() => {
-    // Calculate statistics
-    const activeCount = data.filter(item => item.status === 'Active').length;
-    const archivedCount = data.filter(item => item.status === 'Archive').length;
-    const invitedCount = data.filter(item => item.invite_status === 'Active').length;
+    // Calculate statistics from original unfiltered data
+    const activeCount = originalData.filter(item => item.status === 'Active').length;
+    const archivedCount = originalData.filter(item => item.status === 'Archive').length;
+    const invitedCount = originalData.filter(item => item.invite_status === 'Active').length;
 
     setStats({
-      total: data.length,
+      total: originalData.length,
       active: activeCount,
       archived: archivedCount,
       invited: invitedCount
     });
-  }, [data]);
+  }, [originalData]);
 
   const loadData = async (statusFilter = '') => {
     setLoading(true);
     try {
-      // Mock parent data
-      const mockActiveData = [
-        {
-          parent_name: 'Sarah Johnson',
-          primary_email: 'sarah.johnson@email.com',
-          invite_email: 'sarah.johnson@email.com',
-          time_stamp: '2024-01-15 10:30:00',
-          status: 'Active',
-          invite_status: 'Active',
-          parent_id: '1'
-        },
-        {
-          parent_name: 'Mike Smith',
-          primary_email: 'mike.smith@email.com',
-          invite_email: 'mike.smith@email.com',
-          time_stamp: '2024-01-14 14:20:00',
-          status: 'Active',
-          invite_status: 'Inactive',
-          parent_id: '2'
-        },
-        {
-          parent_name: 'Lisa Brown',
-          primary_email: 'lisa.brown@email.com',
-          invite_email: 'lisa.brown@email.com',
-          time_stamp: '2024-01-13 09:15:00',
-          status: 'Active',
-          invite_status: 'Active',
-          parent_id: '3'
-        },
-        {
-          parent_name: 'David Wilson',
-          primary_email: 'david.wilson@email.com',
-          invite_email: 'david.wilson@email.com',
-          time_stamp: '2024-01-12 11:45:00',
-          status: 'Active',
-          invite_status: 'Active',
-          parent_id: '4'
-        },
-        {
-          parent_name: 'Emma Davis',
-          primary_email: 'emma.davis@email.com',
-          invite_email: 'emma.davis@email.com',
-          time_stamp: '2024-01-11 16:20:00',
-          status: 'Active',
-          invite_status: 'Inactive',
-          parent_id: '5'
-        },
-        {
-          parent_name: 'James Miller',
-          primary_email: 'james.miller@email.com',
-          invite_email: 'james.miller@email.com',
-          time_stamp: '2024-01-10 08:30:00',
-          status: 'Active',
-          invite_status: 'Active',
-          parent_id: '6'
-        },
-        {
-          parent_name: 'Olivia Garcia',
-          primary_email: 'olivia.garcia@email.com',
-          invite_email: 'olivia.garcia@email.com',
-          time_stamp: '2024-01-09 13:15:00',
-          status: 'Active',
-          invite_status: 'Inactive',
-          parent_id: '7'
-        },
-        {
-          parent_name: 'William Martinez',
-          primary_email: 'william.martinez@email.com',
-          invite_email: 'william.martinez@email.com',
-          time_stamp: '2024-01-08 10:00:00',
-          status: 'Active',
-          invite_status: 'Active',
-          parent_id: '8'
-        },
-        {
-          parent_name: 'Sophia Anderson',
-          primary_email: 'sophia.anderson@email.com',
-          invite_email: 'sophia.anderson@email.com',
-          time_stamp: '2024-01-07 15:45:00',
-          status: 'Active',
-          invite_status: 'Active',
-          parent_id: '9'
-        },
-        {
-          parent_name: 'Benjamin Taylor',
-          primary_email: 'benjamin.taylor@email.com',
-          invite_email: 'benjamin.taylor@email.com',
-          time_stamp: '2024-01-06 12:30:00',
-          status: 'Active',
-          invite_status: 'Inactive',
-          parent_id: '10'
-        },
-        {
-          parent_name: 'Charlotte Thomas',
-          primary_email: 'charlotte.thomas@email.com',
-          invite_email: 'charlotte.thomas@email.com',
-          time_stamp: '2024-01-05 09:20:00',
-          status: 'Active',
-          invite_status: 'Active',
-          parent_id: '11'
-        }
-      ];
+      console.log('Fetching profiles...');
+      const response = await profileApis.getProfiles();
+      console.log('Profiles response:', response);
       
-      const mockArchiveData = [
-        {
-          parent_name: 'John Davis',
-          primary_email: 'john.davis@email.com',
-          invite_email: 'john.davis@email.com',
-          time_stamp: '2024-01-04 16:45:00',
-          status: 'Archive',
-          invite_status: 'Inactive',
-          parent_id: '12'
-        }
-      ];
+      // Handle the mock API response structure
+      const profiles = response.data.data || response.data;
+      console.log('Profiles data:', profiles);
+      
+      let responseData = profiles.map(parent => ({
+        parent_name: `${parent.first_name || ''} ${parent.last_name || ''}`.trim() || 'No Name',
+        primary_email: parent.email,
+        invite_email: parent.email,
+        time_stamp: parent.created_at,
+        status: parent.is_active ? 'Active' : 'Archive',
+        invite_status: parent.is_active ? 'Active' : 'Inactive',
+        parent_id: parent.id
+      }));
 
-      let responseData = [];
-
-      if (!statusFilter) {
-        responseData = mockActiveData;
-      } else if (statusFilter === "Archive") {
-        responseData = mockArchiveData;
-      } else if (statusFilter === "Active") {
-        responseData = mockActiveData;
-      } else if (statusFilter === "All") {
-        responseData = [...mockActiveData, ...mockArchiveData];
+      setOriginalData(responseData);
+      
+      if (statusFilter && statusFilter !== 'All') {
+        responseData = responseData.filter(item => item.status === statusFilter);
       }
 
       setData(responseData);
       setCurrentPage(1);
     } catch (error) {
+      console.error('Failed to load parent data:', error);
       setData([]);
       toast.error('Failed to load parent data');
     } finally {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../Header';
-import { fetchFormTemplates, createFormTemplate, updateFormTemplate, deleteFormTemplate } from '../../lib/centralizedApi';
+import { classroomApis, formTemplateApis, childrenApis, enrollmentApis } from '../../services/allApis';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -153,118 +153,35 @@ const FormsRepository = () => {
   }, [classrooms]);
 
 
-  // Load classroom data with mock data
+  // Load classroom data from API
   const loadClassroomData = async () => {
     setIsLoadingClassrooms(true);
     try {
-      // Mock classroom data
-      const mockData = [
-        {
-          class_id: '1',
-          class_name: 'Butterfly',
-          count: 15,
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement' }
-        },
-        {
-          class_id: '2',
-          class_name: 'Purple',
-          count: 12,
-          forms: { '1': 'admission_form', '3': 'parent_handbook' }
-        },
-        {
-          class_id: '3',
-          class_name: 'Rainbow',
-          count: 18,
-          forms: { '1': 'admission_form' }
-        },
-        {
-          class_id: '4',
-          class_name: 'Sunshine',
-          count: 10,
-          forms: { '1': 'admission_form', '4': 'authorization_form' }
-        },
-        {
-          class_id: '5',
-          class_name: 'Starfish',
-          count: 14,
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement', '5': 'medical_form' }
-        },
-        {
-          class_id: '6',
-          class_name: 'Dolphin',
-          count: 16,
-          forms: { '1': 'admission_form', '3': 'parent_handbook' }
-        },
-        {
-          class_id: '7',
-          class_name: 'Eagle',
-          count: 11,
-          forms: { '1': 'admission_form', '4': 'authorization_form', '5': 'medical_form' }
-        },
-        {
-          class_id: '8',
-          class_name: 'Tiger',
-          count: 13,
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement' }
-        },
-        {
-          class_id: '9',
-          class_name: 'Lion',
-          count: 17,
-          forms: { '1': 'admission_form', '3': 'parent_handbook', '4': 'authorization_form' }
-        },
-        {
-          class_id: '10',
-          class_name: 'Elephant',
-          count: 9,
-          forms: { '1': 'admission_form' }
-        },
-        {
-          class_id: '11',
-          class_name: 'Giraffe',
-          count: 20,
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement', '5': 'medical_form' }
-        },
-        {
-          class_id: '12',
-          class_name: 'Zebra',
-          count: 8,
-          forms: { '1': 'admission_form', '3': 'parent_handbook' }
-        },
-        {
-          class_id: '13',
-          class_name: 'Panda',
-          count: 15,
-          forms: { '1': 'admission_form', '4': 'authorization_form' }
-        },
-        {
-          class_id: '14',
-          class_name: 'Koala',
-          count: 12,
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement', '3': 'parent_handbook' }
-        },
-        {
-          class_id: '15',
-          class_name: 'Kangaroo',
-          count: 19,
-          forms: { '1': 'admission_form', '5': 'medical_form' }
-        }
-      ];
+      console.log('Fetching classrooms...');
+      const response = await classroomApis.getClassrooms();
+      console.log('Classrooms response:', response);
+      
+      // Handle the mock API response structure
+      const classrooms = response.data.data || response.data;
+      console.log('Classrooms data:', classrooms);
+      
+      const mockData = classrooms.map(classroom => ({
+        class_id: classroom.id,
+        class_name: classroom.name,
+        count: classroom.current_enrollment || 0,
+        forms: { '1': 'admission_form' }
+      }));
       setClassrooms(mockData || []);
 
-      // Process forms data from mock response
+      // Process forms data from API response
       const formsMap = {};
       mockData.forEach(classroom => {
-        const formsList = [];
-        if (classroom.forms && Object.keys(classroom.forms).length > 0) {
-          Object.values(classroom.forms).forEach(formName => {
-            formsList.push(formName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
-          });
-        }
+        const formsList = ['Admission Form'];
         formsMap[classroom.class_id] = formsList;
       });
       setClassroomForms(formsMap);
     } catch (error) {
+      console.error('Failed to load classroom data:', error);
       toast.error('Failed to load classroom data');
     } finally {
       setIsLoadingClassrooms(false);
@@ -281,236 +198,84 @@ const FormsRepository = () => {
     }
   };
 
-  // Load forms with mock data
+  // Load forms from API
   const loadFormsWithMockData = async () => {
     try {
-      const mockForms = [
-        { id: '1', formName: 'Admission Form', changeType: 'Active' },
-        { id: '2', formName: 'Enrollment Agreement', changeType: 'Default' },
-        { id: '3', formName: 'Parent Handbook', changeType: 'Active' },
-        { id: '4', formName: 'Authorization Form', changeType: 'Available' },
-        { id: '5', formName: 'Medical Form', changeType: 'Active' },
-        { id: '6', formName: 'Emergency Contact Form', changeType: 'Default' },
-        { id: '7', formName: 'Field Trip Permission', changeType: 'Available' },
-        { id: '8', formName: 'Allergy Information', changeType: 'Active' },
-        { id: '9', formName: 'Photo Release Form', changeType: 'Archive' },
-        { id: '10', formName: 'Transportation Form', changeType: 'Default' },
-        { id: '11', formName: 'Immunization Record', changeType: 'Active' },
-        { id: '12', formName: 'Behavioral Plan', changeType: 'Available' },
-        { id: '13', formName: 'Pickup Authorization', changeType: 'Active' },
-        { id: '14', formName: 'Tuition Agreement', changeType: 'Default' },
-        { id: '15', formName: 'Supply List Form', changeType: 'Archive' }
-      ];
+      console.log('Fetching form templates...');
+      const response = await formTemplateApis.getFormTemplates();
+      console.log('Form templates response:', response);
+      
+      // Handle the mock API response structure
+      const templates = response.data.data || response.data;
+      console.log('Form templates data:', templates);
+      
+      const mockForms = templates.map(form => ({
+        id: form.id,
+        formName: form.form_name,
+        changeType: form.status === 'school_default' ? 'Default' : 'Active'
+      }));
       setForms(mockForms);
     } catch (error) {
-      console.log('Failed to load forms with mock data');
+      console.error('Failed to load forms from API:', error);
       setForms([]);
     }
   };
 
-  // Load available forms for dropdown with mock data
+  // Load available forms for dropdown from API
   const loadAvailableForms = async () => {
     try {
-      // Mock available forms data
-      const mockData = [
-        { form_id: '1', form_name: 'admission_form' },
-        { form_id: '2', form_name: 'enrollment_agreement' },
-        { form_id: '3', form_name: 'parent_handbook' },
-        { form_id: '4', form_name: 'authorization_form' },
-        { form_id: '5', form_name: 'medical_form' }
-      ];
-
-      const formsList = [];
-      if (Array.isArray(mockData)) {
-        mockData.forEach(item => {
-          if (item.form_name && item.form_id) {
-            const formattedName = item.form_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            formsList.push({
-              id: item.form_id,
-              name: formattedName
-            });
-          }
-        });
-      }
-
-      console.log('Final forms list:', formsList);
+      const response = await formTemplateApis.getFormTemplates();
+      const formsList = response.data.map(item => ({
+        id: item.id,
+        name: item.form_name
+      }));
       setAvailableForms(formsList);
     } catch (error) {
       console.log('Failed to load available forms:', error);
     }
   };
 
-  // Load student forms data with mock data
+  // Load student forms data from API
   const loadStudentForms = async () => {
     try {
-      // Mock student forms data
-      const mockData = [
-        {
-          child_id: '1',
-          child_first_name: 'Emma',
-          class_name: 'Butterfly',
-          primary_email: 'emma.parent@email.com',
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement' }
-        },
-        {
-          child_id: '2',
-          child_first_name: 'Liam',
-          class_name: 'Purple',
-          primary_email: 'liam.parent@email.com',
-          forms: { '1': 'admission_form' }
-        },
-        {
-          child_id: '3',
-          child_first_name: 'Olivia',
-          class_name: 'Rainbow',
-          primary_email: 'olivia.parent@email.com',
-          forms: { '1': 'admission_form', '3': 'parent_handbook' }
-        },
-        {
-          child_id: '4',
-          child_first_name: 'Noah',
-          class_name: 'Sunshine',
-          primary_email: 'noah.parent@email.com',
-          forms: { '1': 'admission_form', '4': 'authorization_form' }
-        },
-        {
-          child_id: '5',
-          child_first_name: 'Ava',
-          class_name: 'Starfish',
-          primary_email: 'ava.parent@email.com',
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement', '5': 'medical_form' }
-        },
-        {
-          child_id: '6',
-          child_first_name: 'William',
-          class_name: 'Dolphin',
-          primary_email: 'william.parent@email.com',
-          forms: { '1': 'admission_form' }
-        },
-        {
-          child_id: '7',
-          child_first_name: 'Sophia',
-          class_name: 'Eagle',
-          primary_email: 'sophia.parent@email.com',
-          forms: { '1': 'admission_form', '3': 'parent_handbook' }
-        },
-        {
-          child_id: '8',
-          child_first_name: 'James',
-          class_name: 'Tiger',
-          primary_email: 'james.parent@email.com',
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement' }
-        },
-        {
-          child_id: '9',
-          child_first_name: 'Isabella',
-          class_name: 'Lion',
-          primary_email: 'isabella.parent@email.com',
-          forms: { '1': 'admission_form', '4': 'authorization_form', '5': 'medical_form' }
-        },
-        {
-          child_id: '10',
-          child_first_name: 'Benjamin',
-          class_name: 'Elephant',
-          primary_email: 'benjamin.parent@email.com',
-          forms: { '1': 'admission_form' }
-        },
-        {
-          child_id: '11',
-          child_first_name: 'Charlotte',
-          class_name: 'Giraffe',
-          primary_email: 'charlotte.parent@email.com',
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement' }
-        },
-        {
-          child_id: '12',
-          child_first_name: 'Lucas',
-          class_name: 'Zebra',
-          primary_email: 'lucas.parent@email.com',
-          forms: { '1': 'admission_form', '3': 'parent_handbook' }
-        },
-        {
-          child_id: '13',
-          child_first_name: 'Amelia',
-          class_name: 'Panda',
-          primary_email: 'amelia.parent@email.com',
-          forms: { '1': 'admission_form', '4': 'authorization_form' }
-        },
-        {
-          child_id: '14',
-          child_first_name: 'Henry',
-          class_name: 'Koala',
-          primary_email: 'henry.parent@email.com',
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement', '3': 'parent_handbook' }
-        },
-        {
-          child_id: '15',
-          child_first_name: 'Mia',
-          class_name: 'Kangaroo',
-          primary_email: 'mia.parent@email.com',
-          forms: { '1': 'admission_form', '5': 'medical_form' }
-        },
-        {
-          child_id: '16',
-          child_first_name: 'Alexander',
-          class_name: 'Butterfly',
-          primary_email: 'alexander.parent@email.com',
-          forms: { '1': 'admission_form' }
-        },
-        {
-          child_id: '17',
-          child_first_name: 'Harper',
-          class_name: 'Purple',
-          primary_email: 'harper.parent@email.com',
-          forms: { '1': 'admission_form', '3': 'parent_handbook' }
-        },
-        {
-          child_id: '18',
-          child_first_name: 'Ethan',
-          class_name: 'Rainbow',
-          primary_email: 'ethan.parent@email.com',
-          forms: { '1': 'admission_form', '2': 'enrollment_agreement' }
-        }
-      ];
+      console.log('Fetching children and enrollments...');
+      const [childrenResponse, enrollmentsResponse] = await Promise.all([
+        childrenApis.getChildren(),
+        enrollmentApis.getEnrollments()
+      ]);
+      
+      console.log('Children response:', childrenResponse);
+      console.log('Enrollments response:', enrollmentsResponse);
+      
+      // Handle the mock API response structure
+      const children = childrenResponse.data.data || childrenResponse.data;
+      const enrollments = enrollmentsResponse.data.data || enrollmentsResponse.data;
+      
+      console.log('Children data:', children);
+      console.log('Enrollments data:', enrollments);
 
-      const studentsList = [];
-      if (Array.isArray(mockData)) {
-        mockData.forEach(item => {
-          const formsList = [];
-          if (item.forms && Object.keys(item.forms).length > 0) {
-            Object.values(item.forms).forEach(formName => {
-              formsList.push(formName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()));
-            });
-          }
-
-          studentsList.push({
-            id: item.child_id,
-            childName: item.child_first_name || 'No name',
-            classroom: item.class_name || 'Unassigned',
-            parentEmail: item.primary_email || 'No email provided',
-            forms: formsList
-          });
-        });
-      }
+      const studentsList = children.map(child => {
+        const enrollment = enrollments.find(e => e.child_id === child.id);
+        return {
+          id: child.id,
+          childName: child.first_name || 'No name',
+          classroom: enrollment?.classroom?.name || 'Unassigned',
+          parentEmail: enrollment?.parent?.email || 'No email provided',
+          forms: ['Admission Form']
+        };
+      });
 
       setStudentForms(studentsList);
     } catch (error) {
-      console.log('Failed to load student forms data:', error);
+      console.error('Failed to load student forms data:', error);
     }
   };
 
-  // Load student dropdown forms with mock data
+  // Load student dropdown forms from API
   const loadStudentDropdownForms = async () => {
     try {
-      // Mock dropdown forms
-      const mockForms = [
-        'Admission Form',
-        'Enrollment Agreement',
-        'Parent Handbook',
-        'Authorization Form',
-        'Medical Form'
-      ];
-
+      const response = await formTemplateApis.getFormTemplates();
+      const mockForms = response.data.map(form => form.form_name);
       setStudentDropdownForms(mockForms);
     } catch (error) {
       console.log('Failed to load student dropdown forms:', error);

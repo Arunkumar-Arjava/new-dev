@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Download, ExternalLink, Users, FileText, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { classroomApis, formTemplateApis, enrollmentApis } from '../../services/allApis';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,18 +62,17 @@ const ApplicationStatus = () => {
 
   const loadClassrooms = async () => {
     try {
-      const { mockClassrooms } = await import('@/lib/mockData');
-      const mockData = mockClassrooms;
+      const response = await classroomApis.getClassrooms();
+      const mockData = response.data;
       
       const classroomOptions = [
         { value: 'all', label: 'All Classrooms', dataValue: 'all' },
-        ...mockData.filter(item => item.class_name && item.class_name !== undefined)
-          .map(item => ({
-            value: item.class_id,
-            label: item.class_name,
-            dataValue: item.class_name,
-            selected: item.class_id === classID
-          }))
+        ...mockData.map(item => ({
+          value: item.id,
+          label: item.name,
+          dataValue: item.name,
+          selected: item.id === classID
+        }))
       ];
       setClassrooms(classroomOptions);
       
@@ -86,15 +86,14 @@ const ApplicationStatus = () => {
 
   const loadForms = async () => {
     try {
-      const { mockForms } = await import('@/lib/mockData');
-      const mockData = mockForms;
+      const response = await formTemplateApis.getFormTemplates();
+      const mockData = response.data;
       const formOptions = [
         { value: 'all', label: 'All Forms' },
-        ...mockData.filter(item => item.form_name && item.form_name !== undefined)
-          .map(item => ({
-            value: item.form_id,
-            label: item.form_name
-          }))
+        ...mockData.map(item => ({
+          value: item.id,
+          label: item.form_name
+        }))
       ];
       setForms(formOptions);
     } catch (error) {
@@ -106,26 +105,15 @@ const ApplicationStatus = () => {
     setLoading(true);
     
     try {
-      // 15 sample data records for testing pagination
-      const mockData = [
-        { child_first_name: 'John', child_last_name: 'Smith', class_name: 'Pre-K', primary_email: 'john.smith@email.com', additional_parent_email: 'jane.smith@email.com', form_status: 'Completed' },
-        { child_first_name: 'Emma', child_last_name: 'Johnson', class_name: 'Kindergarten', primary_email: 'emma.johnson@email.com', additional_parent_email: '', form_status: 'Incomplete' },
-        { child_first_name: 'Michael', child_last_name: 'Brown', class_name: 'Pre-K', primary_email: 'michael.brown@email.com', additional_parent_email: 'sarah.brown@email.com', form_status: 'Completed' },
-        { child_first_name: 'Sophia', child_last_name: 'Davis', class_name: 'Toddler', primary_email: 'sophia.davis@email.com', additional_parent_email: '', form_status: 'Incomplete' },
-        { child_first_name: 'William', child_last_name: 'Wilson', class_name: 'Kindergarten', primary_email: 'william.wilson@email.com', additional_parent_email: 'mary.wilson@email.com', form_status: 'Completed' },
-        { child_first_name: 'Olivia', child_last_name: 'Miller', class_name: 'Pre-K', primary_email: 'olivia.miller@email.com', additional_parent_email: '', form_status: 'Incomplete' },
-        { child_first_name: 'James', child_last_name: 'Garcia', class_name: 'Toddler', primary_email: 'james.garcia@email.com', additional_parent_email: 'lisa.garcia@email.com', form_status: 'Completed' },
-        { child_first_name: 'Isabella', child_last_name: 'Martinez', class_name: 'Kindergarten', primary_email: 'isabella.martinez@email.com', additional_parent_email: '', form_status: 'Incomplete' },
-        { child_first_name: 'Benjamin', child_last_name: 'Anderson', class_name: 'Pre-K', primary_email: 'benjamin.anderson@email.com', additional_parent_email: 'anna.anderson@email.com', form_status: 'Completed' },
-        { child_first_name: 'Charlotte', child_last_name: 'Taylor', class_name: 'Toddler', primary_email: 'charlotte.taylor@email.com', additional_parent_email: '', form_status: 'Incomplete' },
-        { child_first_name: 'Lucas', child_last_name: 'Thomas', class_name: 'Kindergarten', primary_email: 'lucas.thomas@email.com', additional_parent_email: 'jennifer.thomas@email.com', form_status: 'Completed' },
-        { child_first_name: 'Amelia', child_last_name: 'Jackson', class_name: 'Pre-K', primary_email: 'amelia.jackson@email.com', additional_parent_email: '', form_status: 'Incomplete' },
-        { child_first_name: 'Henry', child_last_name: 'White', class_name: 'Toddler', primary_email: 'henry.white@email.com', additional_parent_email: 'susan.white@email.com', form_status: 'Completed' },
-        { child_first_name: 'Mia', child_last_name: 'Harris', class_name: 'Kindergarten', primary_email: 'mia.harris@email.com', additional_parent_email: '', form_status: 'Incomplete' },
-        { child_first_name: 'Alexander', child_last_name: 'Clark', class_name: 'Pre-K', primary_email: 'alexander.clark@email.com', additional_parent_email: 'rachel.clark@email.com', form_status: 'Completed' }
-      ];
-
-      let responseData = [...mockData];
+      const response = await enrollmentApis.getEnrollments();
+      let responseData = response.data.map(enrollment => ({
+        child_first_name: enrollment.child?.first_name || '',
+        child_last_name: enrollment.child?.last_name || '',
+        class_name: enrollment.classroom?.name || 'Unassigned',
+        primary_email: enrollment.parent?.email || '',
+        additional_parent_email: enrollment.additional_parent?.email || '',
+        form_status: enrollment.admin_approval_status === 'approved' ? 'Completed' : 'Incomplete'
+      }));
 
       // Apply filtering logic
       const isFormAll = formFilter === 'all' || !formFilter;
