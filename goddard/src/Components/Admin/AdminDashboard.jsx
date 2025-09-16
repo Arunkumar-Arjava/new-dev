@@ -1,20 +1,21 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Users, Settings, ChevronRight, Activity } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import Header from '../Header';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  
+  const isAuthenticated = true;
   const signOut = () => {
     console.log('Sign out clicked');
-    window.location.href = '/login';
+    navigate('/login');
   };
 
-  // Dashboard metrics
+  // Dashboard metrics (these could be fetched from an API)
   const dashboardStats = [
     {
       title: 'Active Applications',
@@ -76,17 +77,21 @@ const AdminDashboard = () => {
     navigate(href);
   };
 
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <Header onSignOut={signOut} sidebar={true} />
+    <div className="min-h-screen bg-gray-50">
+      <Header onSignOut={signOut} sidebar={true} component="Dashboard" />
       
       <div className="container mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-3xl font-bold text-[#002e4d] mb-2">
             Welcome to Admin Dashboard
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-gray-600">
             Manage applications, parent details, and system settings from one central location
           </p>
         </div>
@@ -94,16 +99,16 @@ const AdminDashboard = () => {
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {dashboardStats.map((stat, index) => (
-            <Card key={index} className="shadow-md">
+            <Card key={index} className="border-0 shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-                    <h3 className="text-2xl font-bold text-foreground">{stat.value}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+                    <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
+                    <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
                   </div>
                   <div className="text-right">
-                    <Activity className="h-5 w-5 text-muted-foreground mb-1" />
+                    <Activity className="h-5 w-5 text-gray-400 mb-1" />
                     <Badge 
                       variant="secondary" 
                       className={`${stat.trendType === 'positive' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'}`}
@@ -125,34 +130,34 @@ const AdminDashboard = () => {
             return (
               <Card 
                 key={index}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${card.hoverColor} shadow-md`}
+                className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${card.hoverColor} border-0 shadow-sm`}
                 onClick={() => handleCardClick(card.href)}
               >
-                <CardHeader className="pb-4 px-6 pt-6">
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <div className={`p-3 rounded-xl ${card.bgColor}`}>
+                    <div className={`p-3 rounded-lg ${card.bgColor}`}>
                       <IconComponent className={`h-6 w-6 ${card.color}`} />
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
                   </div>
                 </CardHeader>
                 
-                <CardContent className="px-6 pb-6 pt-0">
-                  <CardTitle className="text-lg font-semibold text-foreground mb-3">
+                <CardContent className="pt-0">
+                  <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
                     {card.title}
                   </CardTitle>
-                  <CardDescription className="text-muted-foreground mb-6 text-sm leading-relaxed">
+                  <CardDescription className="text-gray-600 mb-4 text-sm leading-relaxed">
                     {card.description}
                   </CardDescription>
                   
-                  <div className="flex items-center justify-between pt-2">
-                    <Badge variant="outline" className="text-xs px-3 py-1">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="text-xs">
                       {card.stats}
                     </Badge>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className={`${card.color} hover:bg-transparent text-xs font-medium`}
+                      className={`${card.color} hover:bg-transparent text-xs`}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleCardClick(card.href);
@@ -169,7 +174,7 @@ const AdminDashboard = () => {
 
         {/* Quick Actions Section */}
         <div className="mt-12">
-          <h2 className="text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button
               variant="outline"
@@ -177,8 +182,8 @@ const AdminDashboard = () => {
               onClick={() => navigate('/invite-parent')}
             >
               <div>
-                <p className="font-medium text-foreground">Invite New Parent</p>
-                <p className="text-sm text-muted-foreground mt-1">Send enrollment invitations</p>
+                <p className="font-medium text-gray-900">Invite New Parent</p>
+                <p className="text-sm text-gray-500 mt-1">Send enrollment invitations</p>
               </div>
             </Button>
             
@@ -188,8 +193,8 @@ const AdminDashboard = () => {
               onClick={() => navigate('/application-status')}
             >
               <div>
-                <p className="font-medium text-foreground">Review Applications</p>
-                <p className="text-sm text-muted-foreground mt-1">Process pending submissions</p>
+                <p className="font-medium text-gray-900">Review Applications</p>
+                <p className="text-sm text-gray-500 mt-1">Process pending submissions</p>
               </div>
             </Button>
             
@@ -199,8 +204,8 @@ const AdminDashboard = () => {
               onClick={() => navigate('/parent-details')}
             >
               <div>
-                <p className="font-medium text-foreground">Parent Directory</p>
-                <p className="text-sm text-muted-foreground mt-1">Browse all parent profiles</p>
+                <p className="font-medium text-gray-900">Parent Directory</p>
+                <p className="text-sm text-gray-500 mt-1">Browse all parent profiles</p>
               </div>
             </Button>
             
@@ -210,8 +215,8 @@ const AdminDashboard = () => {
               onClick={() => navigate('/forms-repository')}
             >
               <div>
-                <p className="font-medium text-foreground">Manage Forms</p>
-                <p className="text-sm text-muted-foreground mt-1">Configure form templates</p>
+                <p className="font-medium text-gray-900">Manage Forms</p>
+                <p className="text-sm text-gray-500 mt-1">Configure form templates</p>
               </div>
             </Button>
           </div>

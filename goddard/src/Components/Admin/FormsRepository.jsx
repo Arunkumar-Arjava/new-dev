@@ -450,6 +450,47 @@ const FormsRepository = () => {
     }
   };
 
+  const handleAddForm = async (e) => {
+    e.preventDefault();
+
+    if (!newFormName.trim()) {
+      toast.error('Please enter a form name');
+      return;
+    }
+
+    setIsAddingForm(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const newForm = {
+        id: String(forms.length + 1),
+        formName: newFormName.trim(),
+        changeType: 'Active'
+      };
+      
+      const formattedName = newFormName.trim().replace(/\b\w/g, l => l.toUpperCase());
+      
+      // Update forms list
+      setForms(prev => [...prev, newForm]);
+      
+      // Update available forms for dropdowns
+      setAvailableForms(prev => [...prev, {
+        id: newForm.id,
+        name: formattedName
+      }]);
+      
+      // Update student dropdown forms
+      setStudentDropdownForms(prev => [...prev, formattedName]);
+      
+      toast.success('Form created successfully!');
+      setFormName('');
+    } catch (error) {
+      toast.error('Error creating form');
+    } finally {
+      setIsAddingForm(false);
+    }
+  };
+
   const handleDeleteForm = () => {
     const updatedForms = forms.filter(form => form.id !== deletingForm.id);
     setForms(updatedForms);
@@ -512,7 +553,7 @@ const FormsRepository = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 mb-5">
-      <Header onSignOut={signOut} sidebar={true} component="ClassroomFormManage" />
+      <Header onSignOut={signOut} sidebar={true} component="Forms Repository" />
 
       <div className="container mx-auto pt-6 px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Page Header */}
@@ -843,7 +884,7 @@ const FormsRepository = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form className="flex flex-col sm:flex-row gap-4">
+                <form onSubmit={handleAddForm} className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
                     <Label htmlFor="Form-name">Form Name</Label>
                     <Input

@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import SelectSchool from './Components/AuthO/SelectSchool';
+import Login from './Components/AuthO/Login';
+import SignUp from './Components/AuthO/SignUp';
 import AdminDashboard from './Components/Admin/AdminDashboard';
 import ApplicationStatus from './Components/Admin/ApplicationStatus';
 import FormsRepository from './Components/Admin/FormsRepository';
@@ -15,8 +17,10 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<SelectSchool />} />
+          <Route path="/" element={<Navigate to="/select-school" replace />} />
+          <Route path="/select-school" element={<SelectSchool />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/application-status" element={<ApplicationStatus />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/forms-repository" element={<FormsRepository />} />

@@ -18,7 +18,7 @@ const SelectSchool = () => {
   const navigate = useNavigate();
 
   const handleSchoolSelect = () => {
-    navigate('/admin-dashboard');
+    navigate('/login');
   };
 
   return (
